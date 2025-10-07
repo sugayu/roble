@@ -5,8 +5,8 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "roble3d"
 description = "Processing IFU 3D spectral data"
-readme = "README.org"
-license = {file = "LICENSE.txt"}
+readme = "README.rst"
+license = "BSD-3-Clause"
 classifiers = [
     "Programming Language :: Python :: 3"
 ]
@@ -18,21 +18,17 @@ dependencies = [
     "astropy",
     "jwst"
 ]
-authors = {name = "sugayu"}
-maintainers = {name = "sugayu"}
+authors = [{name = "sugayu"}]
+maintainers = [{name = "sugayu"}]
 
 [project.urls]
 Repository = "https://github.com/sugayu/roble3d.git"
 
-[tool.setuptools]
-package-dir = {"" = "src"}
-
 [tool.setuptools.dynamic]
-version = {attr = "src.roble3d.__init__.__version__"}
-
+version = {attr = "roble3d.__version__"}
 
 [tool.setuptools.packages.find]
-exclude = ["example", "test"]
+where = ["src"]
 
 [tool.black]
 skip-string-normalization = true

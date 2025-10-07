@@ -1,6 +1,6 @@
 #+title: roble3d
 
-Like aging in /barricas de roble/ for Rioja wine, contribute to your project by enhancing the value of data.
+Like aging in /barricas de roble/ for Rioja wine, contribute to your project by enhancing the value of 3D data.
 
 * Installation
 
