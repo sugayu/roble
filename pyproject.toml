@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "roble3d"
+description = "Processing IFU 3D spectral data"
+readme = "README.org"
+license = {file = "LICENSE.txt"}
+classifiers = [
+    "Programming Language :: Python :: 3"
+]
+dynamic = ["version"]
+requires-python = ">=3.12.0"
+dependencies = [
+    "numpy",
+    "scipy",
+    "astropy",
+    "jwst"
+]
+authors = {name = "sugayu"}
+maintainers = {name = "sugayu"}
+
+[project.urls]
+Repository = "https://github.com/sugayu/roble3d.git"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.dynamic]
+version = {attr = "src.roble3d.__init__.__version__"}
+
+
+[tool.setuptools.packages.find]
+exclude = ["example", "test"]
+
+[tool.black]
+skip-string-normalization = true
+
+[tool.mypy]
+
+[[tool.mypy.overrides]]
+module = [
+       'scipy.*',
+       'astropy.*',
+       'gwcs.*',
+       'jwst.*',
+       'photutils.*',
+       'importlib.*'
+]
+ignore_missing_imports = true
