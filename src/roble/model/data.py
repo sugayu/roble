@@ -19,6 +19,7 @@ class BaseDetectorImage(ABC):
     def __init__(self) -> None:
         self.intensity: u.Quantity
         self.wavelength: u.Quantity
+        self.uncertainty: u.Quantity
         self.ra: u.Quantity
         self.dec: u.Quantity
         self.x: np.ndarray
