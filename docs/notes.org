@@ -1,0 +1,35 @@
+#+title: Notes
+
+* Speed of resampling
+~roble~ implements several methods for resampling the spectral bins.
+Please see [[file:../src/roble/resample.py]] for the details of the implementations.
+
+Here this section put results of compulational speeds of the resampline methods.
+The default method in ~roble~ is ~searchsorted~, the fastest among the all.
+#+begin_example
+  ===sorted_kdtree===
+  Sort:             0.04326255799969658
+  KDTree and Query: 0.08673494902905077
+  Make flux:        0.004182142962235957
+  Total:            0.1341796499909833
+  ===searchsorted===
+  Sort:             0.04016372503247112
+  searchsorted:     0.0001768349902704358
+  Make flux:        0.0036912159994244576
+  Total:            0.044031776022166014
+  ===searchsorted2===
+  Define variables: 2.7349975425750017e-05
+  searchsorted:     0.04814557801000774
+  Make flux:        0.7535094589693472
+  Total:            0.8016823869547807
+  ===interpolate===
+  Sort:             0.037689964985474944
+  interpolation:    0.015152860025409609
+  Make flux:        0.00405584299005568
+  Total:            0.05689866800094023
+  ===interpolate===
+  Define variables: 6.587011739611626e-06
+  interpolation:    0.05203970003640279
+  Make flux:        0.7756713749840856
+  Total:            0.827717662032228
+#+end_example
