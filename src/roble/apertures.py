@@ -24,4 +24,4 @@ class CircularAperture(BaseAperture):
 
     def include(self, data: BaseDetectorImage) -> np.ndarray:
         dist = (data.ra - self.position.ra) ** 2 + (data.dec - self.position.dec) ** 2
-        return dist.to(u.arcsec) < self.r**2
+        return dist.to(u.arcsec**2) < self.r**2

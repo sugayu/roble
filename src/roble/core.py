@@ -3,6 +3,7 @@
 from __future__ import annotations
 from logging import getLogger
 import numpy as np
+import astropy.units as u
 from astropy.table import QTable
 from . import model
 
@@ -26,21 +27,24 @@ class RobleCore:
         new_sigma2 = np.zeros_like(new_wave)
 
         for data in self.datalist:
-            mask = aperture.include(data)
-            resample = Resampler(data.wavelength[mask], new_wave.T.ravel())
-            new_flux += resample(data.intensity[mask]).reshape(-1, nchain).T
-            new_sigma2 += resample(data.uncertainty[mask] ** 2).reshape(-1, nchain).T
+            mask_aperture = aperture.include(data)
+            available = data.available & mask_aperture
+            resample = Resampler(data.wavelength[available], new_wave.T.ravel())
+            new_flux += resample(data.intensity[available]).reshape(-1, nchain).T
+            new_sigma2 += resample(data.error[available] ** 2).reshape(-1, nchain).T
+        new_error = np.sqrt(new_sigma2)
 
-        new_uncertainty = np.sqrt(new_sigma2)
         return QTable(
-            [new_wave, new_flux, new_uncertainty],
+            [new_wave, new_flux, new_error],
             names=['wavelength', 'flux', 'uncertainty'],
         )
 
     def construct_wavebins(self, chain: int) -> np.ndarray:
         '''Construct new wavelength bins.'''
-        new_wave = np.array([0.0, 1, 2])
-        return new_wave
+        wbin = 1e-3
+        new_wave = np.arange(2.0, 5.0, wbin * chain) * u.um
+        # new_wave = np.array([0.0, 1, 2]) * u.um
+        return new_wave.reshape(-1, 2).T
 
 
 class Resampler:
