@@ -1,5 +1,4 @@
-'''I/O interface of jwst
-'''
+'''I/O interface of jwst'''
 
 from __future__ import annotations
 from logging import getLogger
@@ -30,6 +29,7 @@ class JwstCalData(BaseDetectorImage):
                 'The input data must be jwst.datamodels.IFUImageModel, '
                 f'but {filename} contains {type(data)}.'
             )
+        logger.info(f'Read: {filename}')
 
         ra, dec, wave = cls.get_wcs(data)
         wcsunits = data.meta.wcs.world.unit
