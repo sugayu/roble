@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 from logging import getLogger
+from typing import Sequence
 import numpy as np
 import astropy.units as u
 from astropy.table import QTable
@@ -16,8 +17,13 @@ logger = getLogger(__name__)
 class RobleCore:
     '''Core class for roble.'''
 
-    def __init__(self, data: list[model.BaseDetectorImage]) -> None:
+    def __init__(
+        self,
+        data: Sequence[model.BaseDetectorImage],
+        instrument: model.BaseInstrument,
+    ) -> None:
         self.datalist = data
+        self.instrument = instrument
 
     def extract1d(self, aperture: model.BaseAperture, nchain: int = 2) -> QTable:
         '''Extract 1d spectra with specified number of chains.'''
@@ -38,10 +44,19 @@ class RobleCore:
 
     def construct_wavebins(self, nchain: int) -> u.Quantity:
         '''Construct new wavelength bins.'''
-        wbin = 1e-3
-        new_wave = np.arange(2.8, 5.3, wbin / nchain) * u.um
-        # new_wave = np.array([0.0, 1, 2]) * u.um
-        return new_wave.reshape(-1, 2).T
+        wave_base = self.instrument.wavelength
+        if nchain == 1:
+            return wave_base
+        else:
+            dw = self.instrument.dispersion
+            index = np.arange(len(wave_base))
+            wlist = [wave_base]
+            for i in range(1, nchain):
+                step = i / nchain
+                _wave = np.interp(index + step, index, wave_base)
+                _wave[-1] = _wave[-2] + dw[-1]
+                wlist.append(_wave)
+        return np.vstack(wlist)
 
 
 class Resampler:

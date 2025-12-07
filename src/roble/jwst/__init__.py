@@ -1,1 +1,1 @@
-from .io import JwstCalData
+from .io import JwstCalData, NIRSpecIFU

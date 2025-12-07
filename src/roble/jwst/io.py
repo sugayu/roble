@@ -6,11 +6,13 @@ from pathlib import Path
 import numpy as np
 
 import astropy.units as u
+from astropy.io import fits
 from jwst import datamodels
 
-from ..model.data import BaseDetectorImage
+from . import wavebins
+from ..model.data import BaseDetectorImage, BaseInstrument
 
-__all__ = ['JwstCalData']
+__all__ = ['JwstCalData', 'NIRSpecIFU']
 
 logger = getLogger(__name__)
 
@@ -22,25 +24,29 @@ class JwstCalData(BaseDetectorImage):
     FLAG_DO_NOT_USE: list = ['DO_NOT_USE', 'NON_SCIENCE']
 
     @classmethod
-    def from_jwst(cls, filename: str | Path) -> JwstCalData:
-        data = datamodels.open(filename)
-        if not isinstance(data, datamodels.IFUImageModel):
-            raise TypeError(
-                'The input data must be jwst.datamodels.IFUImageModel, '
-                f'but {filename} contains {type(data)}.'
-            )
-        logger.info(f'Read: {filename}')
+    def from_file(cls, filename: str | Path) -> JwstCalData:
+        with datamodels.open(filename) as data:
+            if not isinstance(data, datamodels.IFUImageModel):
+                raise TypeError(
+                    'The input data must be jwst.datamodels.IFUImageModel, '
+                    f'but {filename} contains {type(data)}.'
+                )
+            logger.info(f'Read: {filename}')
 
-        ra, dec, wave = cls.get_wcs(data)
-        wcsunits = data.meta.wcs.world.unit
+            ra, dec, wave = cls.get_wcs(data)
+            wcsunits = data.meta.wcs.world.unit
+
+            intensity = data.data * u.Unit(data.meta.bunit_data)
+            error = data.err * u.Unit(data.meta.bunit_err)
+            available = cls.get_availablearray(data.dq)
 
         return cls(
             wavelength=wave * wcsunits[2],
-            intensity=data.data * u.Unit(data.meta.bunit_data),
-            error=data.err * u.Unit(data.meta.bunit_err),
+            intensity=intensity,
+            error=error,
             ra=ra * wcsunits[0],
             dec=dec * wcsunits[1],
-            available=cls.get_availablearray(data.dq),
+            available=available,
         )
 
     @staticmethod
@@ -78,3 +84,26 @@ class JwstCalData(BaseDetectorImage):
             _unavail = np.bitwise_and(dq, datamodels.dqflags.pixel[flag]).astype(bool)
             unavailable |= _unavail
         return ~unavailable
+
+
+class NIRSpecIFU(BaseInstrument):
+
+    def __init__(self, disperser: str) -> None:
+        self.disperser = disperser
+        tb = wavebins.read_wavebins(disperser)
+        self._wavelength = tb['wavelength']
+        self._dispersion = tb['dispersion']
+
+    @classmethod
+    def from_file(cls, filename: str | Path) -> NIRSpecIFU:
+        header = fits.getheader(filename, 0)
+        if ((_inst := header.get('INSTRUME', 'Unknown instrument')) != 'NIRSPEC') or (
+            (_opmode := header.get('OPMODE', 'Unknown mode')) != 'IFU'
+        ):
+            raise ValueError(
+                'The input file is not the data for NIRSpec IFU, '
+                f'but the current input is {_inst} {_opmode}.'
+            )
+
+        grating: str = header['GRATING']
+        return cls(grating.strip().upper())

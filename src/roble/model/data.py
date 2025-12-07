@@ -1,5 +1,4 @@
-'''Abstract base classes of a data container.
-'''
+'''Abstract base classes of a data container.'''
 
 from __future__ import annotations
 from abc import ABC
@@ -8,7 +7,7 @@ from logging import getLogger
 import numpy as np
 import astropy.units as u
 
-__all__ = ['BaseDetectorImage']
+__all__ = ['BaseDetectorImage', 'BaseInstrument']
 
 logger = getLogger(__name__)
 
@@ -48,3 +47,21 @@ class BaseDetectorImage(ABC):
             self.shape = self.intensity.shape
         if (self.x.size == 0) or (self.y.size == 0):
             self.y, self.x = np.mgrid[: self.shape[0], : self.shape[1]]
+
+
+class BaseInstrument(ABC):
+    '''Base class that contains information specific to instruments.'''
+
+    def __init__(self) -> None:
+        self._wavelength: u.Quantity
+        self._dispersion: u.Quantity
+
+    @property
+    def wavelength(self) -> u.Quantity:
+        '''Wavelength bins for 1d spec.'''
+        return self._wavelength
+
+    @property
+    def dispersion(self) -> u.Quantity:
+        '''Dispersion or wavelength difference between next pixels.'''
+        return self._dispersion
