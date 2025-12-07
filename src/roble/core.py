@@ -39,7 +39,7 @@ class RobleCore:
     def construct_wavebins(self, nchain: int) -> u.Quantity:
         '''Construct new wavelength bins.'''
         wbin = 1e-3
-        new_wave = np.arange(2.8, 5.0, wbin * nchain) * u.um
+        new_wave = np.arange(2.8, 5.3, wbin / nchain) * u.um
         # new_wave = np.array([0.0, 1, 2]) * u.um
         return new_wave.reshape(-1, 2).T
 
