@@ -28,7 +28,8 @@ class Barrel:
 
     def extract1d(self, aperture: model.BaseAperture, nchain: int = 2) -> dict:
         '''Extract 1d spectra with specified number of chains.'''
-        return self._core.extract1d(aperture, nchain)
+        spec = self._core.extract1d(aperture, nchain)
+        return self._core.change_outputunits(spec)
 
     @classmethod
     def from_jwst(cls, files: list[Path]) -> Barrel:

@@ -93,6 +93,8 @@ class NIRSpecIFU(BaseInstrument):
         tb = wavebins.read_wavebins(disperser)
         self._wavelength = tb['wavelength']
         self._dispersion = tb['dispersion']
+        # TODO: pixelarea to be checked
+        self._pixelarea = (0.1 * u.arcsec) ** 2
 
     @classmethod
     def from_file(cls, filename: str | Path) -> NIRSpecIFU:

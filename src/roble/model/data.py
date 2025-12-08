@@ -55,6 +55,7 @@ class BaseInstrument(ABC):
     def __init__(self) -> None:
         self._wavelength: u.Quantity
         self._dispersion: u.Quantity
+        self._pixelarea: u.Quantity
 
     @property
     def wavelength(self) -> u.Quantity:
@@ -65,3 +66,8 @@ class BaseInstrument(ABC):
     def dispersion(self) -> u.Quantity:
         '''Dispersion or wavelength difference between next pixels.'''
         return self._dispersion
+
+    @property
+    def pixelarea(self) -> u.Quantity:
+        '''Sky area of pixels.'''
+        return self._pixelarea
