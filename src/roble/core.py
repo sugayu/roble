@@ -28,8 +28,15 @@ class RobleCore:
     def extract1d(
         self, aperture: model.BaseAperture, nchain: int = 2
     ) -> dict[str, u.Quantity]:
-        '''Extract 1d spectra with specified number of chains.'''
+        '''Extract 1d spectra.'''
+        chains = self.extract_chains(aperture, nchain)
+        result = self.stack_chains(chains)
+        return result
 
+    def extract_chains(
+        self, aperture: model.BaseAperture, nchain: int = 2
+    ) -> dict[str, u.Quantity]:
+        '''Extract 1d spectral chains.'''
         new_wave = self.construct_wavebins(nchain)
         new_flux = np.zeros(new_wave.shape) * self.datalist[0].intensity.unit
         new_sigma2 = np.zeros(new_wave.shape) * self.datalist[0].error.unit**2
@@ -49,6 +56,32 @@ class RobleCore:
             'wavelength': new_wave,
             'flux': new_flux / n,
             'uncertainty': new_error / n,
+        }
+
+    def stack_chains(self, chains: dict[str, u.Quantity]) -> dict[str, u.Quantity]:
+        '''Stack chains to produce 1d spectrum.'''
+        if (chains['wavelength'].ndim == 1) or (chains['wavelength'].shape[0] == 1):
+            logger.info('The input is already 1d. Return as it is.')
+            return chains
+
+        elif chains['wavelength'].shape[0] != 2:
+            raise ValueError('nchain > 2 is not implemented yet.')
+
+        wave = chains['wavelength']
+        flux = chains['flux']
+        unc = chains['uncertainty']
+
+        w0 = wave.T.ravel()
+        new_wave = (w0[1:] + w0[:-1]) / 2
+        f0 = np.repeat(flux, 2, axis=1) / 2.0
+        new_flux = f0[0, 1:] + f0[1, :-1]
+        u0_2 = (np.repeat(unc, 2, axis=1) / 2.0) ** 2
+        new_unc = np.sqrt(u0_2[0, 1:] + u0_2[1, :-1])
+
+        return {
+            'wavelength': new_wave,
+            'flux': new_flux,
+            'uncertainty': new_unc,
         }
 
     def construct_wavebins(self, nchain: int) -> u.Quantity:

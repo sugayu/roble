@@ -27,9 +27,14 @@ class Barrel:
         self._core = RobleCore(data, instrument)
 
     def extract1d(self, aperture: model.BaseAperture, nchain: int = 2) -> dict:
-        '''Extract 1d spectra with specified number of chains.'''
+        '''Extract 1d spectra.'''
         spec = self._core.extract1d(aperture, nchain)
         return self._core.change_outputunits(spec)
+
+    def extract_chains(self, aperture: model.BaseAperture, nchain: int = 2) -> dict:
+        '''Extract spectra with specified number of chains.'''
+        chains = self._core.extract_chains(aperture, nchain)
+        return self._core.change_outputunits(chains)
 
     @classmethod
     def from_jwst(cls, files: list[Path]) -> Barrel:
