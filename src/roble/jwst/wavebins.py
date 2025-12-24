@@ -3,10 +3,11 @@
 from __future__ import annotations
 from importlib import resources
 from logging import getLogger
-from pathlib import Path
 import numpy as np
 from astropy.table import QTable
 import astropy.units as u
+
+from .crds import CRDSContextNoFILE
 
 __all__ = ['produce_wavelengthbins', 'read_wavebins']
 
@@ -29,7 +30,7 @@ def read_wavebins(key_disperser: str) -> QTable:
     return QTable.read(pdir / fname_wave)
 
 
-def produce_wavelengthbins(key_disperser: str) -> None:
+def produce_wavelengthbins(key_disperser: str, reffile_cubepar: str) -> None:
     '''Produce fiducial wavelength bins of roble 1d spectra.'''
     global fnames_dispersion_curves, fnames_wavelengths
 
@@ -45,7 +46,10 @@ def produce_wavelengthbins(key_disperser: str) -> None:
     tb = QTable.read(pdir / 'dispersion_curves' / fname_dispersion)
     wave = tb['WAVELENGTH'].value
     dispersion = tb['DLDS'].value
-    crdspars = QTable.read(pdir / 'crds/jwst_nirspec_cubepar_0009.fits', 1)
+
+    with CRDSContextNoFILE() as crds:
+        p_cubrpar = crds.get_pathtofile(reffile_cubepar)
+        crdspars = QTable.read(p_cubrpar, 1)
 
     dwave = wave[1:] - wave[:-1]
     dwave = np.concatenate(([0], dwave))
@@ -87,4 +91,4 @@ fnames_wavelengths = {
 
 if __name__ == '__main__':
     for disperser in fnames_dispersion_curves.keys():
-        produce_wavelengthbins(disperser)
+        produce_wavelengthbins(disperser, 'jwst_nirspec_cubepar_0009.fits')
