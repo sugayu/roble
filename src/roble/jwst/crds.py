@@ -21,7 +21,7 @@ class CRDSContextNoFILE:
     '''Controle CRDS files with no file.'''
 
     def __init__(self) -> None:
-        pass
+        self._overwrite = False
 
     def __enter__(self):
         env = os.environ
@@ -30,15 +30,17 @@ class CRDSContextNoFILE:
         elif 'CRDS_PATH' in env:
             pass
         else:
-            pdir = resources.files('roble.jwst.lib.crds')
-            Path(str(pdir)).mkdir(exist_ok=True)
-            os.environ['CRDS_PATH_SINGLE'] = str(pdir)
+            with resources.path('roble.jwst.lib', 'crds') as pdir:
+                pdir.mkdir(exist_ok=True)
+                os.environ['CRDS_PATH_SINGLE'] = str(pdir)
+            self._overwrite = True
 
         logger.info(f'JWST CRDS Path: {crds.config.get_crds_path()}')
         return self
 
     def __exit__(self, type, value, traceback):
-        del os.environ['CRDS_PATH_SINGLE']
+        if self._overwrite:
+            del os.environ['CRDS_PATH_SINGLE']
 
     @staticmethod
     def get_pathtofile(filename: str) -> Path:
@@ -53,6 +55,7 @@ class CRDSContext(CRDSContextNoFILE):
     def __init__(self, fname: Path) -> None:
         self.fname = fname
         self.meta = read_metadata(fname)
+        super().__init__()
 
     def get_context(self) -> str:
         '''Get the CRDS context used in the calibration.'''
@@ -70,7 +73,7 @@ class CRDSContext(CRDSContextNoFILE):
         If not exist, return an empty string.
         '''
         if result := self._get_metareffile(key):
-            return crds.pop_crds_uri(result)
+            return crds.config.pop_crds_uri(result)
         return self._find_reffile_from_logs(key)
 
     def _get_metareffile(self, key: str) -> str:

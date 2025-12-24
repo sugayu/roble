@@ -9,7 +9,7 @@ import astropy.units as u
 from astropy.io import fits
 from jwst import datamodels
 
-from . import wavebins
+from . import wavebins, pixelarea
 from ..model.data import BaseDetectorImage, BaseInstrument
 
 __all__ = ['JwstCalData', 'NIRSpecIFU']
@@ -88,13 +88,13 @@ class JwstCalData(BaseDetectorImage):
 
 class NIRSpecIFU(BaseInstrument):
 
-    def __init__(self, disperser: str) -> None:
+    def __init__(self, disperser: str, pixelarea: u.Quantity) -> None:
         self.disperser = disperser
         tb = wavebins.read_wavebins(disperser)
         self._wavelength = tb['wavelength']
         self._dispersion = tb['dispersion']
-        # TODO: pixelarea to be checked
-        self._pixelarea = (0.1 * u.arcsec) ** 2
+        # self._pixelarea = (0.1 * u.arcsec) ** 2
+        self._pixelarea = pixelarea
 
     @classmethod
     def from_file(cls, filename: str | Path) -> NIRSpecIFU:
@@ -108,4 +108,6 @@ class NIRSpecIFU(BaseInstrument):
             )
 
         grating: str = header['GRATING']
-        return cls(grating.strip().upper())
+        pixarea = pixelarea.make_pixareamap(Path(filename))
+
+        return cls(grating.strip().upper(), pixarea)
