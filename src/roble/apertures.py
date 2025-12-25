@@ -1,13 +1,12 @@
-'''Apertures.
-'''
+'''Apertures.'''
 
 from __future__ import annotations
 from logging import getLogger
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
-from .model.aperture import BaseAperture
-from .model.data import BaseDetectorImage
+from .base.aperture import BaseAperture
+from .base.data import BaseDetectorImage
 
 __all__ = ['CircularAperture']
 

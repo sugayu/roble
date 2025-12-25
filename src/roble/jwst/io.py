@@ -10,7 +10,7 @@ from astropy.io import fits
 from jwst import datamodels
 
 from . import wavebins, pixelarea
-from ..model.data import BaseDetectorImage, BaseInstrument
+from ..base.data import BaseDetectorImage, BaseInstrument
 
 __all__ = ['JwstCalData', 'NIRSpecIFU']
 

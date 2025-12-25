@@ -6,7 +6,7 @@ from typing import Sequence
 import numpy as np
 import astropy.units as u
 from astropy.table import QTable
-from . import model
+from . import base
 
 __all__ = ['RobleCore', 'Resampler']
 
@@ -19,14 +19,14 @@ class RobleCore:
 
     def __init__(
         self,
-        data: Sequence[model.BaseDetectorImage],
-        instrument: model.BaseInstrument,
+        data: Sequence[base.BaseDetectorImage],
+        instrument: base.BaseInstrument,
     ) -> None:
         self.datalist = data
         self.instrument = instrument
 
     def extract1d(
-        self, aperture: model.BaseAperture, nchain: int = 2
+        self, aperture: base.BaseAperture, nchain: int = 2
     ) -> dict[str, u.Quantity]:
         '''Extract 1d spectra.'''
         chains = self.extract_chains(aperture, nchain)
@@ -34,7 +34,7 @@ class RobleCore:
         return result
 
     def extract_chains(
-        self, aperture: model.BaseAperture, nchain: int = 2
+        self, aperture: base.BaseAperture, nchain: int = 2
     ) -> dict[str, u.Quantity]:
         '''Extract 1d spectral chains.'''
         new_wave = self.construct_wavebins(nchain)
