@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 from logging import getLogger
-from scipy.linalg import solve_triangular
+from scipy.linalg import solve_triangular, cholesky, LinAlgError
+import astropy.units as u
+from astropy.modeling import FittableModel
 from astropy.modeling.fitting import _NLLSQFitter
 import numpy as np
 
@@ -14,6 +16,31 @@ logger = getLogger(__name__)
 ##
 class _CovarWeight_NLLSQFitter(_NLLSQFitter):
     '''Add objective_function considering a covariance matrix as weight.'''
+
+    def __call__(
+        self, *args, sigma: None | u.Quantity = None, **kwargs
+    ) -> FittableModel:
+        '''Wrapper of call method to recieve a new argument "sigma".'''
+        x = np.asarray(args[1])
+
+        if sigma is not None:
+            if ('weights' in kwargs) and (kwargs['weights'] is not None):
+                raise ValueError('Either sigma or weights can be input.')
+
+            sigma = np.asarray(sigma)
+            if sigma.shape == (x.size, x.size):
+                try:
+                    # scipy.linalg.cholesky requires lower=True to return L L^T = A
+                    weights = cholesky(sigma, lower=True)
+                except LinAlgError as e:
+                    raise ValueError("`sigma` must be positive definite.") from e
+
+            else:
+                weights = 1 / sigma
+
+            kwargs['weights'] = weights
+
+        return super().__call__(*args, **kwargs)
 
     def objective_function(self, fps, *args) -> np.ndarray:
         '''
