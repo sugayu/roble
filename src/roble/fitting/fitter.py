@@ -42,7 +42,7 @@ class _CovarWeight_NLLSQFitter(_NLLSQFitter):
 
         return super().__call__(*args, **kwargs)
 
-    def objective_function(self, fps, *args) -> np.ndarray:
+    def objective_function(self, fps, *args, **kwargs) -> np.ndarray:
         '''
         Function to minimize.
 
@@ -57,13 +57,15 @@ class _CovarWeight_NLLSQFitter(_NLLSQFitter):
 
         if weights is not None:
             if weights.shape == (measurements.size, measurements.size):
-                residuals = super().objective_function(fps, (args[0], None) + args[2:])
+                residuals = super().objective_function(
+                    fps, (args[0], None) + args[2:], **kwargs
+                )
                 return solve_triangular(weights, residuals, lower=True)
 
-        return super().objective_function(fps, *args)
+        return super().objective_function(fps, *args, **kwargs)
 
 
-class TRFSQFitter(_CovarWeight_NLLSQFitter):
+class TRFLSQFitter(_CovarWeight_NLLSQFitter):
     '''Wrapper of TRFSQFitter in astropy.'''
 
     def __init__(self, calc_uncertainties=False, use_min_max_bounds=False) -> None:

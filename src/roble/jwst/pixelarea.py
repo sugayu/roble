@@ -24,7 +24,7 @@ def make_pixareamap(fname: Path) -> u.Quantity:
     tb = QTable.read(p_area, 1)
 
     slice_idmap = fits.getdata(fname, 'REGIONS')  # from 1 to 30
-    pixarea = np.full_like(slice_idmap, np.nan)
+    pixarea = np.full_like(slice_idmap, np.nan, dtype=float)
     for row in tb:  # from 0 to 29
         pixarea[slice_idmap == (row['SLICE_ID'] + 1)] = row['PIXAREA']
-    return pixarea * u.Quantity(u.arcsec**2)
+    return pixarea * u.arcsec**2

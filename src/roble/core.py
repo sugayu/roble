@@ -37,17 +37,20 @@ class RobleCore:
         self, aperture: base.BaseAperture, nchain: int = 2
     ) -> dict[str, u.Quantity]:
         '''Extract 1d spectral chains.'''
+        ua = self.instrument.pixelarea.unit
         new_wave = self.construct_wavebins(nchain)
-        new_flux = np.zeros(new_wave.shape) * self.datalist[0].intensity.unit
-        new_sigma2 = np.zeros(new_wave.shape) * self.datalist[0].error.unit**2
+        new_flux = np.zeros(new_wave.shape) * self.datalist[0].intensity.unit * ua
+        new_sigma2 = np.zeros(new_wave.shape) * (self.datalist[0].error.unit * ua) ** 2
         n = np.zeros(new_wave.shape, dtype=int)
 
         for data in self.datalist:
             mask_aperture = aperture.include(data)
             available = data.available & mask_aperture
             resample = Resampler(data.wavelength[available], new_wave.T.ravel())
-            new_flux += resample(data.intensity[available]).reshape(-1, nchain).T
-            new_sigma2 += resample(data.error[available] ** 2).reshape(-1, nchain).T
+            intensity = data.intensity[available] * self.instrument.pixelarea[available]
+            new_flux += resample(intensity).reshape(-1, nchain).T
+            sigma2 = (data.error[available] * self.instrument.pixelarea[available]) ** 2
+            new_sigma2 += resample(sigma2).reshape(-1, nchain).T
             n += resample.count_wherein().reshape(-1, nchain).T
         new_error = np.sqrt(new_sigma2)
         n[n == 0] = 1  # To avoid zero devision error
@@ -103,16 +106,14 @@ class RobleCore:
     def change_outputunits(
         self, spectra: dict[str, u.Quantity]
     ) -> dict[str, u.Quantity]:
-        '''Change units of output spectra to erg/s/cm2/um.
+        '''Change units of output spectra to erg/s/cm2/AA.
 
         Currently, this assumes to recieve arguments given by extract1d.
         '''
         spectra['wavelength'] = spectra['wavelength'].to(u.um)
-        spectra['flux'] = spectra['flux'] * self.instrument.pixelarea
         spectra['flux'] = spectra['flux'].to(
             u.erg / u.s / u.cm**2 / u.AA, u.spectral_density(spectra['wavelength'])
         )
-        spectra['uncertainty'] = spectra['uncertainty'] * self.instrument.pixelarea
         spectra['uncertainty'] = spectra['uncertainty'].to(
             u.erg / u.s / u.cm**2 / u.AA, u.spectral_density(spectra['wavelength'])
         )
