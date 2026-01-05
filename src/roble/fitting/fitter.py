@@ -8,7 +8,7 @@ from astropy.modeling import FittableModel
 from astropy.modeling.fitting import _NLLSQFitter
 import numpy as np
 
-__all__ = ['TRFSQFitter', 'DogBoxLSQFitter', 'LMLSQFitter']
+__all__ = ['TRFLSQFitter', 'DogBoxLSQFitter', 'LMLSQFitter']
 
 logger = getLogger(__name__)
 
@@ -18,25 +18,30 @@ class _CovarWeight_NLLSQFitter(_NLLSQFitter):
     '''Add objective_function considering a covariance matrix as weight.'''
 
     def __call__(
-        self, *args, sigma: None | u.Quantity = None, **kwargs
+        self, *args, covar: None | u.Quantity = None, **kwargs
     ) -> FittableModel:
-        '''Wrapper of call method to recieve a new argument "sigma".'''
+        '''Wrapper of call method to recieve a new argument "covar".
+
+        This wrapper can revieve the covariance matrix.
+        Part of this code is from scipy.optimize.curve_fit.
+        '''
         x = np.asarray(args[1])
 
-        if sigma is not None:
+        if covar is not None:
             if ('weights' in kwargs) and (kwargs['weights'] is not None):
                 raise ValueError('Either sigma or weights can be input.')
 
-            sigma = np.asarray(sigma)
-            if sigma.shape == (x.size, x.size):
+            covar = np.asarray(covar)
+            if covar.shape == (x.size, x.size):
                 try:
                     # scipy.linalg.cholesky requires lower=True to return L L^T = A
-                    weights = cholesky(sigma, lower=True)
+                    weights = cholesky(covar, lower=True)
                 except LinAlgError as e:
                     raise ValueError("`sigma` must be positive definite.") from e
 
             else:
-                weights = 1 / sigma
+                # covar would mean a vector of variance.
+                weights = 1 / np.sqrt(covar)
 
             kwargs['weights'] = weights
 
@@ -53,10 +58,10 @@ class _CovarWeight_NLLSQFitter(_NLLSQFitter):
         '''
 
         weights: None | np.ndarray = args[1]
-        measurements = args[-1]
+        x = args[-1]
 
         if weights is not None:
-            if weights.shape == (measurements.size, measurements.size):
+            if weights.shape == (x.size, x.size):
                 residuals = super().objective_function(
                     fps, (args[0], None) + args[2:], **kwargs
                 )

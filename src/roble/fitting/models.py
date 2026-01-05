@@ -61,10 +61,10 @@ class AreaGaussian1D(Fittable1DModel):
     @staticmethod
     def fit_deriv(x, area, mean, std):
         '''Gaussian1D model function derivatives.'''
-        shift = x - mean
-        d_area = np.exp(-0.5 / std**2 * shift**2) / (np.sqrt(2 * np.pi) * std)
-        d_mean = area * d_area * shift / std**2
-        d_std = area * d_area * ((shift**2 - std**2) / std**3)
+        diff = x - mean
+        d_area = np.exp(-0.5 / std**2 * diff**2) / (np.sqrt(2 * np.pi) * std)
+        d_mean = area * d_area * diff / std**2
+        d_std = area * d_area * ((diff**2 - std**2) / std**3)
         return [d_area, d_mean, d_std]
 
     @property
